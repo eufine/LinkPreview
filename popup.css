@@ -1,0 +1,77 @@
+/* popup.css */
+
+.preview-popup {
+    position: fixed;
+    background-color: rgba(0, 94, 94, 0.7); /* YouTube dark theme color */
+    border: none;
+    border-radius: 8px;
+    padding: 8px;
+    z-index: 99999; /* Ensure it's above other page elements */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    right: 80px;
+    top: 50%;
+    transform: translateY(-50%);
+    box-shadow: 5px 5px 15px -2px rgba(0, 0, 0, 0.6);
+    margin: 0 auto;
+    width: 650px;
+    height: 75%;
+    color: white;
+}
+
+.popup-header{
+    color:white;
+    font-size: 1.2em;
+    margin-bottom: 5px;
+    text-wrap: wrap;
+    width: 100%;
+}
+
+#popFrame {
+    border: none;
+    width: 100%; /* Adjust as needed */
+    height: 100%; /* 16:9 aspect ratio for width 420px */
+    background-color: white;
+}
+
+.popup-buttons {
+    position: absolute; /* Floating buttons */
+    right: 10px; /* Align to the right */
+    top: 10px; /* Align from the top */
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Space between buttons */
+    padding: 5px;
+}
+
+.popup-buttons button {
+    background-color: rgba(60, 60, 60, 0.8); /* Darker, slightly transparent */
+    color: white;
+    border: none;
+    border-radius: 50%; /* Make them circular */
+    width: 32px!important; /* Button size */ 
+    height: 32px!important; /* Button size */
+    font-size: 16px;
+    cursor: pointer;
+    display: flex!important;
+    justify-content: center!important;
+    align-items: center!important;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    padding: 1px 6px!important;
+    margin-bottom: 0px!important;
+}
+
+.popup-buttons button:hover {
+    background-color: rgba(80, 80, 80, 0.9);
+    transform: scale(1.05);
+}
+
+.popup-buttons button:active {
+    transform: scale(0.98);
+}
+
+#copyUrlBtn, #embedBtn { fill:aqua;}
+#closePopupBtn { fill: red; }
+

@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Link Previewer",
+  "version": "3.0",
+  "description": "Preview links in a popup",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "clipboardWrite",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "exclude_matches": ["*://www.youtube.com/*"],
+      "js": ["content.js"],
+      "css": ["popup.css"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["popup.html", "popup.css"],
+      "matches": ["*://*/*"],
+      "exclude_matches": ["*://www.youtube.com/embed/*"]  
+    }
+  ],
+  "icons": {
+    "128": "eye-solid.png"
+  }
+}
