@@ -20,7 +20,8 @@
       "matches": ["*://*/*"],
       "exclude_matches": ["*://www.youtube.com/*"],
       "js": ["content.js"],
-      "css": ["popup.css"]
+      "css": ["popup.css"],
+      "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [

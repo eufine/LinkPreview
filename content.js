@@ -13,6 +13,7 @@ document.addEventListener('dragstart', (event) => {
     if (target.tagName === 'A' && target.href) {
         currentDraggedLink = target.href; // Store the URL of the dragged link
         linkTitle = target.title ? target.title : target.innerHTML; // Get the title or use a default
+        console.log('Drag started for link:', currentDraggedLink);
     } else {
         currentDraggedLink = null; // Reset if not a valid link
     }
@@ -84,12 +85,11 @@ function showPreviewPopup(url) {
         previewDiv.remove();
     }
 
-        // --- NEW: Disconnect existing observer if any (for cleanup before new popup) ---
+    // Disconnect existing observer if any (for cleanup before new popup)
     if (popupMutationObserver) {
         popupMutationObserver.disconnect();
         popupMutationObserver = null;
     }
-    // -------------------------------------------------------------------------------
 
 
     // Create the main popup div
@@ -114,13 +114,21 @@ function showPreviewPopup(url) {
     document.body.appendChild(previewDiv);
 
     // Add event listeners for the copy and close buttons
-    document.getElementById('copyUrlBtn').addEventListener('click', () => copyUrlToClipboard(url));
-    document.getElementById('closePopupBtn').addEventListener('click', closePreviewPopup);
+    // IMPORTANT: Add event.stopPropagation() to prevent clicks from bubbling to document and closing popup
+    document.getElementById('copyUrlBtn').addEventListener('click', (event) => {
+        event.stopPropagation(); // Stop propagation
+        copyUrlToClipboard(url);
+    });
+    document.getElementById('closePopupBtn').addEventListener('click', (event) => {
+        event.stopPropagation(); // Stop propagation
+        closePreviewPopup();
+    });
+
 
     // Initial cleanup of extra elements
     cleanupPopupElements('.preview-popup', '.popup-header', '#popFrame');
 
-    // --- NEW: Set up MutationObserver for future DOM changes within the popup ---
+    // Set up MutationObserver for future DOM changes within the popup
     popupMutationObserver = new MutationObserver((mutationsList) => {
         for (const mutation of mutationsList) {
             if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
@@ -132,11 +140,7 @@ function showPreviewPopup(url) {
     });
 
     // Start observing the previewDiv for child list changes
-    // This will detect if any new elements are added directly inside previewDiv
-    // which might land between the header and the iframe.
     popupMutationObserver.observe(previewDiv, { childList: true });
-    // ---------------------------------------------------------------------------
-    
 }
 
 /**
@@ -144,8 +148,7 @@ function showPreviewPopup(url) {
  * @param {string} url - The URL to copy.
  */
 function copyUrlToClipboard(url) {
-    // Use the Clipboard API to write text
-    document.execCommand('copy'); // Fallback for older browsers, though navigator.clipboard is preferred
+    document.execCommand('copy'); // Fallback for older browsers
     navigator.clipboard.writeText(url).then(() => {
         console.log('URL copied to clipboard:', url);
         // Provide visual feedback by changing the button icon temporarily
@@ -153,7 +156,9 @@ function copyUrlToClipboard(url) {
         document.getElementById('copyUrlBtn').innerHTML = '<svg viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>';
         // Revert the icon after a short delay
         setTimeout(() => {
-            document.getElementById('copyUrlBtn').innerHTML = originalSvg;
+            if (document.getElementById('copyUrlBtn')) {
+                document.getElementById('copyUrlBtn').innerHTML = originalSvg;
+            }
         }, 1500);
     }).catch(err => {
         console.error('Failed to copy URL:', err);
@@ -165,9 +170,15 @@ function copyUrlToClipboard(url) {
  * Closes the preview popup if it exists.
  */
 function closePreviewPopup() {
+    console.log("closePreviewPopup called."); // Log to confirm when this function is triggered
     if (previewDiv) {
         previewDiv.remove(); // Remove the popup from the DOM
         previewDiv = null; // Reset the reference
+    }
+    // Disconnect the observer when the popup is closed
+    if (popupMutationObserver) {
+        popupMutationObserver.disconnect();
+        popupMutationObserver = null;
     }
 }
 
@@ -183,30 +194,25 @@ function cleanupPopupElements(parentContainerSelector, headerSelector, iframeSel
     const parentContainer = document.querySelector(parentContainerSelector);
 
     if (!parentContainer) {
-        console.warn(`Parent container "${parentContainerSelector}" not found.`);
+        console.warn('Parent container not found for cleanup.');
         return;
     }
 
     const header = parentContainer.querySelector(headerSelector);
     const iframe = parentContainer.querySelector(iframeSelector);
 
-    if (!header) {
-        console.warn(`Header "${headerSelector}" not found within "${parentContainerSelector}".`);
-        return;
-    }
-    if (!iframe) {
-        console.warn(`Iframe "${iframeSelector}" not found within "${parentContainerSelector}".`);
+    if (!header || !iframe) {
+        console.warn('Header or iframe not found within parent container for cleanup.');
         return;
     }
 
-    let currentNode = header.nextElementSibling; // Start checking from the element immediately after the header
+    let currentNode = header.nextElementSibling; 
 
     const elementsToRemove = [];
 
     // Iterate through siblings until we reach the iframe or the end of the parent
     while (currentNode && currentNode !== iframe) {
         // We found an element between the header and the iframe
-        console.warn(`Found an unexpected element between header and iframe. Removing:`, currentNode);
         elementsToRemove.push(currentNode);
         currentNode = currentNode.nextElementSibling;
     }
@@ -235,5 +241,3 @@ document.addEventListener('keydown', (event) => {
         closePreviewPopup();
     }
 });
-
-

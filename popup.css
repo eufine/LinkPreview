@@ -15,7 +15,7 @@
     transform: translateY(-50%);
     box-shadow: 5px 5px 15px -2px rgba(0, 0, 0, 0.6);
     margin: 0 auto;
-    width: 650px;
+    width: 35%;
     height: 80%;
     color: white;
 }
@@ -37,8 +37,8 @@
 
 .popup-buttons {
     position: absolute; /* Floating buttons */
-    right: 10px; /* Align to the right */
-    top: 10px; /* Align from the top */
+    right: 16px; /* Align to the right */
+    top: 50%; /* Align from the top */
     display: flex;
     flex-direction: column;
     gap: 8px; /* Space between buttons */
