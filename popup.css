@@ -1,23 +1,23 @@
 /* popup.css */
 
 .preview-popup {
-    position: fixed;
+    align-items: center;
+    box-shadow: 5px 5px 15px -2px rgba(0, 0, 0, 0.6);
     background-color: rgba(0, 94, 94, 0.7); /* YouTube dark theme color */
     border: none;
     border-radius: 8px;
-    padding: 8px;
-    z-index: 99999; /* Ensure it's above other page elements */
+    color: white;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    right: 80px;
-    top: 50%;
-    transform: translateY(-50%);
-    box-shadow: 5px 5px 15px -2px rgba(0, 0, 0, 0.6);
-    margin: 0 auto;
-    width: 35%;
     height: 80%;
-    color: white;
+    margin: 0 auto;
+    padding: 8px;
+    position: fixed;
+    right: 80px;
+    transform: translateY(-50%);
+    top: 50%;
+    width: 35%;
+    z-index: 99999; /* Ensure it's above other page elements */
 }
 
 .popup-header{
@@ -37,8 +37,8 @@
 
 .popup-buttons {
     position: absolute; /* Floating buttons */
-    right: 16px; /* Align to the right */
-    top: 50%; /* Align from the top */
+    right: 20px; /* Align to the right */
+    top: 10%; /* Align from the top */
     display: flex;
     flex-direction: column;
     gap: 8px; /* Space between buttons */
@@ -46,32 +46,36 @@
 }
 
 .popup-buttons button {
-    background-color: rgba(60, 60, 60, 0.8); /* Darker, slightly transparent */
-    color: white;
-    border: none;
+    opacity: 0.3;
     border-radius: 50%; /* Make them circular */
-    width: 32px!important; /* Button size */ 
-    height: 32px!important; /* Button size */
     font-size: 16px;
     cursor: pointer;
     display: flex!important;
     justify-content: center!important;
     align-items: center!important;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
     padding: 1px 6px!important;
     margin-bottom: 0px!important;
+    width: 2.5em !important;
+    height: 2.5em !important;
+    border: 0.25em solid rgba(0, 229, 229, 0.3)!important;
+    background-color: rgba(0, 178, 178, 0.2)!important;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
 }
 
 .popup-buttons button:hover {
-    background-color: rgba(80, 80, 80, 0.9);
-    transform: scale(1.05);
+    opacity: 0.9;
+    transform: scale(1.5);
 }
 
 .popup-buttons button:active {
-    transform: scale(0.98);
+    transform: scale(1.2);
 }
 
-#copyUrlBtn, #embedBtn { fill:aqua;}
-#closePopupBtn { fill: red; }
+#copyUrlBtn, #embedBtn { fill:rgba(255,255,255,0.9);}
+#closePopupBtn { fill: rgba(255,0,0,0.9); }
 
+footer{
+    display: none!important;
+}
