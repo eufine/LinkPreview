@@ -64,7 +64,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     const cssText =
-      "html, body, * { user-select: text !important; -webkit-user-select: text !important; -moz-user-select: text !important; -ms-user-select: text !important; }";
+      "html, body, * { user-select: text !important; -webkit-user-select: text !important; -moz-user-select: text !important; -ms-user-select: text !important; } .footer-sticky-icon{ display: none !important; }";
 
     chrome.scripting.insertCSS(
       {
