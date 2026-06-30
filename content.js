@@ -2,105 +2,74 @@
 
 let previewDiv = null;
 let currentDraggedLink = null;
-let linkTitle = 'Link Preview';
+let linkTitle = "Link Preview";
 let popupMutationObserver = null;
 
-
-// Event listener for when a drag operation starts
-document.addEventListener('dragstart', (event) => {
-    const target = event.target;
-    // Check if the dragged element is an anchor tag with an href
-    if (target.tagName === 'A' && target.href) {
-        currentDraggedLink = target.href; // Store the URL of the dragged link
-        linkTitle = target.title ? target.title : target.innerHTML; // Get the title or use a default
-        console.log('Drag started for link:', currentDraggedLink);
-    } else {
-        currentDraggedLink = null; // Reset if not a valid link
-    }
+document.addEventListener("dragstart", (event) => {
+  const target = event.target;
+  if (target.tagName === "A" && target.href) {
+    currentDraggedLink = target.href;
+    linkTitle = target.title ? target.title : target.innerHTML;
+    //linkTitle = target.hasAttribute('data-title') ? target.data-title : (target.title ? target.title : target.innerHTML);
+    console.log("Drag started for link:", currentDraggedLink);
+  } else {
+    currentDraggedLink = null;
+  }
 });
 
-// Event listener for allowing drop
-document.addEventListener('dragover', (event) => {
-    event.preventDefault(); // Necessary to allow a drop
+document.addEventListener("dragover", (event) => {
+  event.preventDefault();
 });
 
-// Event listener for when an element is dropped
-document.addEventListener('drop', (event) => {
-    if (currentDraggedLink) {
-        event.preventDefault(); // Prevent default browser drop behavior
-        showPreviewPopup(currentDraggedLink); // Show the preview popup with the dragged link
-        currentDraggedLink = null; // Reset the dragged link after dropping
-    }
+document.addEventListener("drop", (event) => {
+  if (currentDraggedLink) {
+    event.preventDefault();
+    showPreviewPopup(currentDraggedLink);
+    currentDraggedLink = null;
+  }
 });
 
-/**
- * Finds the highest computed z-index on the current page.
- * It primarily considers elements with a non-static position and an explicit z-index.
- * @returns {number} The highest z-index found, or a default high value if none found or issues.
- */
 function getHighestZIndex() {
-    let maxZIndex = 0;
-    // Select all elements. This can be performance intensive on very large DOMs.
-    // We are looking for elements that explicitly use z-index for stacking.
-    const allElements = document.querySelectorAll('*');
+  let maxZIndex = 0;
+  const allElements = document.querySelectorAll("*");
 
-    allElements.forEach(element => {
-        try {
-            // Get the computed style for the element
-            const computedStyle = window.getComputedStyle(element);
-            const zIndex = computedStyle.getPropertyValue('z-index');
-            const position = computedStyle.getPropertyValue('position');
+  allElements.forEach((element) => {
+    try {
+      const computedStyle = window.getComputedStyle(element);
+      const zIndex = computedStyle.getPropertyValue("z-index");
+      const position = computedStyle.getPropertyValue("position");
 
-            // Only consider elements that have an explicit z-index and are positioned
-            // (relative, absolute, fixed, sticky) or create a stacking context through other means
-            // (like transform, opacity < 1, filter, etc.)
-            // For simplicity and effectiveness, we primarily target positioned elements with explicit z-index.
-            if (position !== 'static' && zIndex !== 'auto' && zIndex !== '') {
-                const currentZIndex = parseInt(zIndex, 10);
-                if (!isNaN(currentZIndex) && currentZIndex > maxZIndex) {
-                    maxZIndex = currentZIndex;
-                }
-            }
-        } catch (e) {
-            // Catch potential errors when getting computed styles on certain elements (e.g., SVG elements in some contexts)
-            console.warn("Could not get computed style for an element:", element, e);
+      if (position !== "static" && zIndex !== "auto" && zIndex !== "") {
+        const currentZIndex = parseInt(zIndex, 10);
+        if (!isNaN(currentZIndex) && currentZIndex > maxZIndex) {
+          maxZIndex = currentZIndex;
         }
-    });
+      }
+    } catch (e) {
+      console.warn("Could not get computed style for an element:", element, e);
+    }
+  });
 
-    // Ensure we don't exceed the maximum z-index value for a 32-bit signed integer (2^31 - 1)
-    // A very high, but safe, default like 2147483647 is often used for top-level popups.
-    // We add 1 to the highest found, but cap it at a reasonable high number if it gets too close to max.
-    // Or simply return a very high default if maxZIndex is still 0 (meaning no explicit z-index found).
-    return Math.min(maxZIndex + 1, 2147483647); // Add 1 to be higher, but don't exceed practical max
+  return Math.min(maxZIndex + 1, 2147483647);
 }
 
-
-/**
- * Displays a preview popup for a given URL.
- * @param {string} url - The URL to preview.
- */
 function showPreviewPopup(url) {
-    // Remove any existing preview popup
-    if (previewDiv) {
-        previewDiv.remove();
-    }
+  if (previewDiv) {
+    previewDiv.remove();
+  }
 
-    // Disconnect existing observer if any (for cleanup before new popup)
-    if (popupMutationObserver) {
-        popupMutationObserver.disconnect();
-        popupMutationObserver = null;
-    }
+  if (popupMutationObserver) {
+    popupMutationObserver.disconnect();
+    popupMutationObserver = null;
+  }
 
+  previewDiv = document.createElement("div");
+  previewDiv.classList.add("preview-popup");
 
-    // Create the main popup div
-    previewDiv = document.createElement('div');
-    previewDiv.classList.add('preview-popup');
-    
-    const highestZIndex = getHighestZIndex(); // Get the highest z-index on the page
-    previewDiv.style.zIndex = highestZIndex + 1; // Set the z-index of the popup to be higher than any existing element
-    
-    // Set the inner HTML of the popup, including header, iframe, and buttons
-    previewDiv.innerHTML = `
+  const highestZIndex = getHighestZIndex();
+  previewDiv.style.zIndex = highestZIndex + 1;
+
+  previewDiv.innerHTML = `
         <div class="popup-header">
             ${linkTitle}
         </div>
@@ -111,133 +80,274 @@ function showPreviewPopup(url) {
         </div>
     `;
 
-    document.body.appendChild(previewDiv);
+  document.body.appendChild(previewDiv);
 
-    // Add event listeners for the copy and close buttons
-    // IMPORTANT: Add event.stopPropagation() to prevent clicks from bubbling to document and closing popup
-    document.getElementById('copyUrlBtn').addEventListener('click', (event) => {
-        event.stopPropagation(); // Stop propagation
-        copyUrlToClipboard(url);
-    });
-    document.getElementById('closePopupBtn').addEventListener('click', (event) => {
-        event.stopPropagation(); // Stop propagation
-        closePreviewPopup();
-    });
-
-
-    // Initial cleanup of extra elements
-    cleanupPopupElements('.preview-popup', '.popup-header', '#popFrame');
-
-    // Set up MutationObserver for future DOM changes within the popup
-    popupMutationObserver = new MutationObserver((mutationsList) => {
-        for (const mutation of mutationsList) {
-            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                // If child nodes were added to the previewDiv, re-run cleanup.
-                console.log('DOM change detected in popup. Running cleanup for added elements.');
-                cleanupPopupElements('.preview-popup', '.popup-header', '#popFrame');
-            }
+  // Request background to inject CSS targeting the iframe's frame (more precise than all-frames).
+  // Try to send the iframe's URL so the background can locate the frameId(s) and inject into them.
+  try {
+    const iframeEl = document.getElementById("popFrame");
+    const iframeUrl = iframeEl && iframeEl.src ? iframeEl.src : url;
+    chrome.runtime.sendMessage(
+      { action: "injectUserSelectForFrame", iframeUrl: iframeUrl },
+      (resp) => {
+        if (chrome.runtime.lastError) {
+          console.warn(
+            "injectUserSelectForFrame message failed:",
+            chrome.runtime.lastError,
+          );
+        } else {
+          console.log("Background injectUserSelectForFrame response:", resp);
         }
-    });
+      },
+    );
+  } catch (e) {
+    console.warn("sendMessage failed:", e);
+  }
 
-    // Start observing the previewDiv for child list changes
-    popupMutationObserver.observe(previewDiv, { childList: true });
+  // Wire up buttons safely (in case DOM changes)
+  const copyBtn = document.getElementById("copyUrlBtn");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      copyUrlToClipboard(url);
+    });
+  }
+
+  const closeBtn = document.getElementById("closePopupBtn");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      closePreviewPopup();
+    });
+  }
+
+  // Locate the iframe we've just created
+  const iframe = document.getElementById("popFrame");
+
+  // Helper to enable text selection inside same-origin iframes by adding a unique class and injected style
+  // Helper to enable text selection inside same-origin iframes by adding a unique class and injected style
+  function enableIframeTextSelection(fr) {
+    try {
+      const doc =
+        fr.contentDocument || (fr.contentWindow && fr.contentWindow.document);
+      if (!doc) return;
+  
+      const inject = () => {
+        try {
+          fr.classList.add("lp-iframe");
+          fr.setAttribute("data-lp-userselect", "1");
+        } catch (ignoreErr) {
+          // ignore if we can't modify the element attributes
+        }
+  
+        try {
+          if (doc.documentElement) {
+            doc.documentElement.classList.add("lp-force-select");
+          }
+  
+          const styleId = "linkpreview-userselect";
+          if (!doc.getElementById(styleId) && doc.head) {
+            const styleEl = doc.createElement("style");
+            styleEl.id = styleId;
+            styleEl.textContent =
+              ".lp-force-select, .lp-force-select * { user-select: text !important; -webkit-user-select: text !important; -moz-user-select: text !important; -ms-user-select: text !important; }";
+            doc.head.appendChild(styleEl);
+          }
+        } catch (e) {
+          // ignore
+        }
+      };
+  
+      inject();
+  
+      // Catches in-page DOM changes (SPA rebuilding <head>) without a full navigation
+      if (doc.head) {
+        const headObserver = new MutationObserver(() => {
+          if (!doc.getElementById("linkpreview-userselect")) inject();
+        });
+        headObserver.observe(doc.head, { childList: true });
+      }
+  
+      // Catches full navigations — re-runs this whole function against the NEW contentDocument
+      fr.addEventListener("load", () => enableIframeTextSelection(fr), { once: true });
+    } catch (e) {
+      // Accessing cross-origin iframe will throw — fail gracefully
+      console.warn(
+        "Could not inject CSS into iframe (possibly cross-origin):",
+        e,
+      );
+    }
+  }
+  
+  if (iframe) {
+    // enableIframeTextSelection now handles both "already loaded" and all future
+    // reloads internally (it re-arms its own load listener each time), so a
+    // single unconditional call is enough.
+    enableIframeTextSelection(iframe);
+  
+    // Also ask the background script to inject CSS as a fallback for cross-origin
+    // cases where direct DOM access fails.
+    try {
+      chrome.runtime.sendMessage({ action: "injectUserSelect" }, (resp) => {
+        if (chrome.runtime.lastError) {
+          console.warn(
+            "injectUserSelect message failed:",
+            chrome.runtime.lastError,
+          );
+        } else {
+          console.log("Background injectUserSelect response:", resp);
+        }
+      });
+    } catch (e) {
+      console.warn("sendMessage failed:", e);
+    }
+  }
+  
+  // Initial cleanup (wrapped to avoid throwing on cross-origin access)
+  try {
+    cleanupPopupElements(".preview-popup", ".popup-header", "#popFrame");
+  } catch (e) {
+    console.warn("Cleanup failed (possibly due to cross-origin iframe):", e);
+  }
+
+  popupMutationObserver = new MutationObserver((mutationsList) => {
+    for (const mutation of mutationsList) {
+      if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+        console.log(
+          "DOM change detected in popup. Running cleanup for added elements.",
+        );
+        try {
+          cleanupPopupElements(".preview-popup", ".popup-header", "#popFrame");
+        } catch (err) {
+          console.warn("Cleanup during mutation failed:", err);
+        }
+      }
+    }
+  });
+
+  popupMutationObserver.observe(previewDiv, { childList: true });
 }
 
-/**
- * Copies the given URL to the clipboard and provides visual feedback.
- * @param {string} url - The URL to copy.
- */
 function copyUrlToClipboard(url) {
-    document.execCommand('copy'); // Fallback for older browsers
-    navigator.clipboard.writeText(url).then(() => {
-        console.log('URL copied to clipboard:', url);
-        // Provide visual feedback by changing the button icon temporarily
-        const originalSvg = document.getElementById('copyUrlBtn').innerHTML;
-        document.getElementById('copyUrlBtn').innerHTML = '<svg viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>';
-        // Revert the icon after a short delay
-        setTimeout(() => {
-            if (document.getElementById('copyUrlBtn')) {
-                document.getElementById('copyUrlBtn').innerHTML = originalSvg;
-            }
-        }, 1500);
-    }).catch(err => {
-        console.error('Failed to copy URL:', err);
+  document.execCommand("copy");
+  navigator.clipboard
+    .writeText(url)
+    .then(() => {
+      console.log("URL copied to clipboard:", url);
+      const originalSvg = document.getElementById("copyUrlBtn").innerHTML;
+      document.getElementById("copyUrlBtn").innerHTML =
+        '<svg viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>';
+      setTimeout(() => {
+        if (document.getElementById("copyUrlBtn")) {
+          document.getElementById("copyUrlBtn").innerHTML = originalSvg;
+        }
+      }, 1500);
+    })
+    .catch((err) => {
+      console.error("Failed to copy URL:", err);
     });
 }
 
-
-/**
- * Closes the preview popup if it exists.
- */
 function closePreviewPopup() {
-    console.log("closePreviewPopup called."); // Log to confirm when this function is triggered
-    if (previewDiv) {
-        previewDiv.remove(); // Remove the popup from the DOM
-        previewDiv = null; // Reset the reference
-    }
-    // Disconnect the observer when the popup is closed
-    if (popupMutationObserver) {
-        popupMutationObserver.disconnect();
-        popupMutationObserver = null;
-    }
+  console.log("closePreviewPopup called.");
+  if (previewDiv) {
+    previewDiv.remove();
+    previewDiv = null;
+  }
+
+  if (popupMutationObserver) {
+    popupMutationObserver.disconnect();
+    popupMutationObserver = null;
+  }
 }
 
-/**
- * Cleans up extra elements found between the popup-header and the iframe
- * within a specified parent container.
- *
- * @param {string} parentContainerSelector The CSS selector for the parent container (e.g., '#preview-popup').
- * @param {string} headerSelector The CSS selector for the header element (e.g., '.popup-header').
- * @param {string} iframeSelector The CSS selector for the iframe element (e.g., 'iframe#myIframe').
- */
-function cleanupPopupElements(parentContainerSelector, headerSelector, iframeSelector) {
-    const parentContainer = document.querySelector(parentContainerSelector);
+function cleanupPopupElements(
+  parentContainerSelector,
+  headerSelector,
+  iframeSelector,
+) {
+  const parentContainer = document.querySelector(parentContainerSelector);
 
-    if (!parentContainer) {
-        console.warn('Parent container not found for cleanup.');
-        return;
+  if (!parentContainer) {
+    console.warn("Parent container not found for cleanup.");
+    return;
+  }
+
+  const header = parentContainer.querySelector(headerSelector);
+  const iframe = parentContainer.querySelector(iframeSelector);
+
+  if (!header || !iframe) {
+    console.warn(
+      "Header or iframe not found within parent container for cleanup.",
+    );
+    return;
+  }
+
+  let currentNode = header.nextElementSibling;
+
+  const elementsToRemove = [];
+
+  while (currentNode && currentNode !== iframe) {
+    elementsToRemove.push(currentNode);
+    currentNode = currentNode.nextElementSibling;
+  }
+
+  elementsToRemove.forEach((el) => el.remove());
+
+  if (elementsToRemove.length > 0) {
+    console.log(
+      `Cleanup complete: Removed ${elementsToRemove.length} extra elements.`,
+    );
+  } else {
+    console.log(
+      "No extra elements found between header and iframe. Popup structure is clean.",
+    );
+  }
+
+  const popFrame = document.getElementById("popFrame");
+  if (popFrame) {
+    try {
+      const doc =
+        popFrame.contentDocument ||
+        (popFrame.contentWindow && popFrame.contentWindow.document);
+
+      // Remove any marking from the iframe element itself in the parent DOM
+      try {
+        popFrame.classList.remove("lp-iframe");
+        popFrame.removeAttribute("data-lp-userselect");
+      } catch (ignoreErr) {
+        // ignore
+      }
+
+      if (doc && doc.documentElement) {
+        // Remove the unique class added to the iframe documentElement
+        doc.documentElement.classList.remove("lp-force-select");
+        // Remove injected style if present
+        const injected = doc.getElementById("linkpreview-userselect");
+        if (injected) injected.remove();
+      }
+    } catch (e) {
+      // Cross-origin iframes can't be accessed; ignore safely
+      console.warn(
+        "Could not modify iframe contents during cleanup (possibly cross-origin):",
+        e,
+      );
     }
-
-    const header = parentContainer.querySelector(headerSelector);
-    const iframe = parentContainer.querySelector(iframeSelector);
-
-    if (!header || !iframe) {
-        console.warn('Header or iframe not found within parent container for cleanup.');
-        return;
-    }
-
-    let currentNode = header.nextElementSibling; 
-
-    const elementsToRemove = [];
-
-    // Iterate through siblings until we reach the iframe or the end of the parent
-    while (currentNode && currentNode !== iframe) {
-        // We found an element between the header and the iframe
-        elementsToRemove.push(currentNode);
-        currentNode = currentNode.nextElementSibling;
-    }
-
-    // Remove the collected elements
-    elementsToRemove.forEach(el => el.remove());
-
-    if (elementsToRemove.length > 0) {
-        console.log(`Cleanup complete: Removed ${elementsToRemove.length} extra elements.`);
-    } else {
-        console.log('No extra elements found between header and iframe. Popup structure is clean.');
-    }
+  }
 }
 
-// Close popup if clicked outside
-document.addEventListener('click', (event) => {
-    // Check if the click occurred outside the previewDiv and not on an element that triggered the popup
-    if (previewDiv && !previewDiv.contains(event.target) && !event.target.closest('.preview-popup')) {
-        closePreviewPopup();
-    }
+document.addEventListener("click", (event) => {
+  if (
+    previewDiv &&
+    !previewDiv.contains(event.target) &&
+    !event.target.closest(".preview-popup")
+  ) {
+    closePreviewPopup();
+  }
 });
 
-// Close popup on Escape key press
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-        closePreviewPopup();
-    }
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closePreviewPopup();
+  }
 });

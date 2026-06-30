@@ -1,4 +1,13 @@
 /* popup.css */
+body.pb {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+body.pb.page-template-subcategory {
+    user-select: text!impotant;
+    -webkit-user-select: text !important;
+}
 
 .preview-popup {
     align-items: center;
@@ -20,12 +29,13 @@
     z-index: 99999; /* Ensure it's above other page elements */
 }
 
-.popup-header{
-    color:white;
+.popup-header {
+    color: white;
     font-size: 1.2em;
     margin-bottom: 5px;
     text-wrap: wrap;
     width: 100%;
+    cursor: default;
 }
 
 #popFrame {
@@ -41,7 +51,7 @@
     top: 10%; /* Align from the top */
     display: flex;
     flex-direction: column;
-    gap: 8px; /* Space between buttons */
+    gap: 13px; /* Space between buttons */
     padding: 5px;
 }
 
@@ -50,22 +60,24 @@
     border-radius: 50%; /* Make them circular */
     font-size: 16px;
     cursor: pointer;
-    display: flex!important;
-    justify-content: center!important;
-    align-items: center!important;
-    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-    padding: 1px 6px!important;
-    margin-bottom: 0px!important;
-    width: 2.5em !important;
-    height: 2.5em !important;
-    border: 0.25em solid rgba(0, 229, 229, 0.3)!important;
-    background-color: rgba(0, 178, 178, 0.2)!important;
-    backdrop-filter: blur(5px);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    transition:
+        transform 0.2s ease-out,
+        opacity 0.2s ease-out;
+    padding: 1px 6px !important;
+    margin-bottom: 0px !important;
+    width: 2em !important;
+    height: 2em !important;
+    border: 0.1em solid rgba(0, 160, 178, 0.3) !important;
+    background-color: rgba(0, 229, 218, 0.3) !important;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
 }
 
 .popup-buttons button:hover {
-    opacity: 0.9;
+    opacity: 1;
     transform: scale(1.5);
 }
 
@@ -73,9 +85,10 @@
     transform: scale(1.2);
 }
 
-#copyUrlBtn, #embedBtn { fill:rgba(255,255,255,0.9);}
-#closePopupBtn { fill: rgba(255,0,0,0.9); }
-
-footer{
-    display: none!important;
+#copyUrlBtn,
+#embedBtn {
+    fill: rgba(255, 255, 255, 0.9);
+}
+#closePopupBtn {
+    fill: rgba(255, 0, 0, 0.9);
 }
