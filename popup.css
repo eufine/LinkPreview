@@ -26,6 +26,8 @@ body.pb.page-template-subcategory {
     transform: translateY(-50%);
     top: 50%;
     width: 35%;
+    min-width: 430px;
+    max-width: 650px;
     z-index: 99999; /* Ensure it's above other page elements */
 }
 
