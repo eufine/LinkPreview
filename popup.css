@@ -5,7 +5,7 @@ body.pb {
 }
 
 body.pb.page-template-subcategory {
-    user-select: text!impotant;
+    user-select: text!important;
     -webkit-user-select: text !important;
 }
 
