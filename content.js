@@ -336,7 +336,27 @@ function cleanupPopupElements(
   }
 }
 
+/* document.addEventListener("click", (event) => {
+  if (
+    previewDiv &&
+    !previewDiv.contains(event.target) &&
+    !event.target.closest(".preview-popup")
+  ) {
+    closePreviewPopup();
+  }
+});
+*/
+// Alt Left Click to open popup
 document.addEventListener("click", (event) => {
+  const link = event.target.closest && event.target.closest("a");
+
+  if (event.altKey && event.button === 0 && link && link.href) {
+    event.preventDefault();
+    linkTitle = link.title ? link.title : link.innerHTML;
+    showPreviewPopup(link.href);
+    return;
+  }
+
   if (
     previewDiv &&
     !previewDiv.contains(event.target) &&
