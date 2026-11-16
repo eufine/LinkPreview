@@ -1,13 +1,12 @@
 // iframe-textselect.js
 //
-// Keeps `user-select: text` active inside a same-origin iframe, even
-// across in-frame navigations or SPA-style content swaps that would
-// otherwise wipe out a one-time injected <style> tag.
-//
-// Usage: enableIframeTextSelection(iframeElement)
-// Safe to call multiple times; re-arms itself on every load.
+// Keeps `user-select: text` active inside a same-origin iframe,
+// including SPA-style <head> swaps.
+// Called by content.js on every iframe "load" event.
 
 function enableIframeTextSelection(fr) {
+  if (!fr || fr.src === "about:blank") return;
+
   try {
     const doc =
       fr.contentDocument || (fr.contentWindow && fr.contentWindow.document);
@@ -19,8 +18,8 @@ function enableIframeTextSelection(fr) {
       try {
         fr.classList.add("lp-iframe");
         fr.setAttribute("data-lp-userselect", "1");
-      } catch (ignoreErr) {
-        // ignore if we can't modify the element attributes
+      } catch {
+        // ignore if attributes cannot be modified
       }
 
       try {
@@ -34,36 +33,25 @@ function enableIframeTextSelection(fr) {
           styleEl.textContent =
             ".lp-force-select, .lp-force-select * { " +
             "user-select: text !important; " +
-            "-webkit-user-select: text !important; " +
-            "-moz-user-select: text !important; " +
-            "-ms-user-select: text !important; }";
+            "-webkit-user-select: text !important; }";
           doc.head.appendChild(styleEl);
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
     };
 
     inject();
 
-    // Catches in-page DOM changes (SPA rebuilding <head>) without a full navigation
-    if (doc.head) {
+    // Catches in-page SPA DOM changes rebuilding <head> without a full navigation
+    if (doc.head && !doc.head.dataset.lpObserved) {
+      doc.head.dataset.lpObserved = "1";
       const headObserver = new MutationObserver(() => {
         if (!doc.getElementById(STYLE_ID)) inject();
       });
       headObserver.observe(doc.head, { childList: true });
     }
-
-    // Catches full navigations — re-runs this whole function against the
-    // NEW contentDocument, re-injecting and re-arming both observers.
-    fr.addEventListener("load", () => enableIframeTextSelection(fr), {
-      once: true,
-    });
-  } catch (e) {
-    // Accessing cross-origin iframe will throw — fail gracefully
-    console.warn(
-      "Could not inject CSS into iframe (possibly cross-origin):",
-      e,
-    );
+  } catch {
+    // Expected for cross-origin iframes; background.js handles CSS injection instead
   }
 }
